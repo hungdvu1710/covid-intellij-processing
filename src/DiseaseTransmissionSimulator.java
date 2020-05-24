@@ -29,9 +29,13 @@ public class DiseaseTransmissionSimulator extends PApplet {
     // population (i.e., getIsInfected() doesn't change to match the number
     // of infected people if it's changed up here). These should be connected
     // in some way.
-    int infected = 1;
     int uninfected = 199;
     int recovered = 0;
+    int death = 0;
+    int initPatients = 3;
+    int infected = initPatients;
+    boolean exitOver = false; //check whether the button pressed or not
+    boolean resetOver = false;
 
     // cols stores the columns in the graph at the top of the screen.
     ArrayList<Column> cols = new ArrayList<Column>();
@@ -47,33 +51,66 @@ public class DiseaseTransmissionSimulator extends PApplet {
     int columnCounter = 0;
 
     public void setup() {
-        size(640, 360);
+        size(800, 520);
         for (int i = 0; i < 200; i++) {
             // Adds a new Ball that starts at a random x value and a random y value that
             // avoids the graph area at the top of the screen.
-            balls.add(new Ball(random(width), random(60, height), 5.0f, getIsInfected(i), getIsSocialDistancing(i)));
+            balls.add(new Ball(random(width), random(120, height), 5.0f, getIsInfected(i), getIsSocialDistancing(i), getIsProtected(i)));
         }
     }
-
+    public void resetSketch(){
+        infected = initPatients;
+        uninfected = 199;
+        recovered = 0;
+        death = 0;
+        exitOver = false; //check whether the button pressed or not
+        resetOver = false;
+        clear();
+        leftCol = 110;
+        cols = new ArrayList<Column>();
+        balls = new ArrayList<Ball>();
+        columnCounter = 0;
+        frameCount = -1;
+    }
+    public void set1Patients(){
+        initPatients = 1;
+        resetSketch();
+    }
+    public void set3Patients(){
+        initPatients = 3;
+        resetSketch();
+    }
+    public void set5Patients(){
+        initPatients = 5;
+        resetSketch();
+    }
+    public void set10Patients(){
+        initPatients = 10;
+        resetSketch();
+    }
     // Currently, only the first Ball is returned as infected.
     // TODO: Make this variable based on how many people we'd like to be infected
     // initially.
     State getIsInfected(int i) {
-        return i == 0 ? State.INFECTED : State.UNINFECTED;
+        return i < initPatients ? State.INFECTED : State.UNINFECTED;
     }
 
     // Currently, about 1 in 8 people are social distancing. The first person
     // is set to not be social distancing because it makes the simulation move faster.
     // TODO: Update this logic as necessary when getIsInfected() is updated.
     boolean getIsSocialDistancing(int i) {
-        return floor(random(0, 8)) != 0 && i != 0;
+        return floor(random(0, 8)) == 0 && i >= initPatients;
+    }
+    boolean getIsProtected(int i) {
+        return floor(random(6)) <= 4 && i >= initPatients;
     }
 
     public void draw() {
+
         background(51);
 
         for (Ball b : balls) {
-            b.update();
+            b.update(mouseX,mouseY);
             b.display();
             b.checkBoundaryCollision();
         }
@@ -98,23 +135,165 @@ public class DiseaseTransmissionSimulator extends PApplet {
                 balls.get(i).checkCollision(balls.get(j));
             }
         }
+        rectMode(CORNER);
+        //invoke exit button
+        if (exitOver) {
+            fill(51);
+            rect(10, 60, 40, 20);
+            fill(255,0,0);
+            text("exit",20,75);
+            if(mousePressed){
+                exit();
+            }
+        } else {
+            fill(2);
+            rect(10, 60, 40, 20);
+            fill(255);
+            text("exit",20,75);
+        }
+        //invoke reset button
+        if (resetOver) {
+            fill(51);
+            rect(10, 85, 40, 20);
+            fill(255,0,0);
+            text("reset",17,100);
+            if(mousePressed){
+                resetSketch();
+            }
+        } else {
+            fill(2);
+            rect(10, 85, 40, 20);
+            fill(255);
+            text("reset",17,100);
+        }
+        //invoke set1patient button
+        if(overButton(60, 60, 60, 20)){
+            fill(51);
+            rect(60, 60, 60, 20);
+            fill(255,0,0);
+            text("1 patient",65,75);
+            if(mousePressed){
+                set1Patients();
+            }
+        }  else{
+            fill(2);
+            rect(60, 60, 60, 20);
+            fill(255);
+            text("1 patient",65,75);
+        }
+
+        //invoke set3patient button
+        if(overButton(130, 60, 60, 20)){
+            fill(51);
+            rect(130, 60, 60, 20);
+            fill(255,0,0);
+            text("3 patients",135,75);
+            if(mousePressed){
+                set3Patients();
+            }
+        }  else{
+            fill(2);
+            rect(130, 60, 60, 20);
+            fill(255);
+            text("3 patients",135,75);
+        }
+
+        //invoke set5patient button
+        if(overButton(60, 85, 60, 20)){
+            fill(51);
+            rect(60, 85, 60, 20);
+            fill(255,0,0);
+            text("5 patients",65,100);
+            if(mousePressed){
+                set5Patients();
+            }
+        }  else{
+            fill(2);
+            rect(60, 85, 60, 20);
+            fill(255);
+            text("5 patients",65,100);
+        }
+
+        //invoke set10patient button
+        if(overButton(130, 85, 65, 20)){
+            fill(51);
+            rect(130, 85, 65, 20);
+            fill(255,0,0);
+            text("10 patients",135,100);
+            if(mousePressed){
+                set10Patients();
+            }
+        }  else{
+            fill(2);
+            rect(130, 85, 65, 20);
+            fill(255);
+            text("10 patients",135,100);
+        }
     }
 
     // Draw all the words to the left of the graph, as well as their accompanying numbers.
+    boolean overButton(int x, int y, int width, int height)  {
+        return mouseX >= x && mouseX <= x + width &&
+                mouseY >= y && mouseY <= y + height;
+    }
     void drawStats() {
+        rectMode(CORNER);
         fill(204);
-        rect(0, 0, width, 60);
+        rect(0, 0, width, 120);
+
         fill(51);
         text("healthy: " + uninfected, 10, 30);
         text("sick: " + infected, 10, 40);
         text("recovered: " + recovered, 10, 20);
-    }
+        text("death: " + death, 10, 50);
 
+        //exit button
+        fill(2);
+        rect(10, 60, 40, 20);
+        fill(255);
+        text("exit",20,75);
+
+        //set 1 Patient button
+        fill(2);
+        rect(60, 60, 60, 20);
+        fill(255);
+        text("1 patient",65,75);
+
+        //set 3 Patients button
+        fill(2);
+        rect(130, 60, 60, 20);
+        fill(255);
+        text("3 patients",135,75);
+
+        //reset button
+        fill(2);
+        rect(10, 85, 40, 20);
+        fill(255);
+        text("reset",17,100);
+
+        //set 5 Patients button
+        fill(2);
+        rect(60, 85, 60, 20);
+        fill(255);
+        text("5 patients",65,100);
+
+        //set 10 Patients button
+        fill(2);
+        rect(130, 85, 65, 20);
+        fill(255);
+        text("10 patients",135,100);
+        if(death == infected){
+            //all infected people have either deceased or cured => stop the simulation
+            delay(60000);
+            exit();
+        }
+    }
 
     enum State {
         UNINFECTED,
         INFECTED,
-        RECOVERED
+        RECOVERED,
+        DEAD
     }
 
 
@@ -126,15 +305,17 @@ public class DiseaseTransmissionSimulator extends PApplet {
     private class Ball {
         PVector position;
         PVector velocity;
-
         float radius, m;
         State state;
         // If infected, tracks how many days a person has been infected.
         // After 1000 days/frames, the person recovers.
         int infectedDays;
         boolean isSocialDistancing;
-
-        Ball(float x, float y, float r_, State state, boolean isSocialDistancing) {
+        boolean isProtected;
+        //If infected, tracks if the person is cured
+        boolean isCured;
+        int treatedDays;
+        Ball(float x, float y, float r_, State state, boolean isSocialDistancing, boolean isProtected) {
             position = new PVector(x, y);
             radius = r_;
             // People who are social distancing should start and stay at 0 velocity,
@@ -148,18 +329,40 @@ public class DiseaseTransmissionSimulator extends PApplet {
             }
             this.state = state;
             infectedDays = 0;
+            treatedDays = 0;
             this.isSocialDistancing = isSocialDistancing;
+            this.isProtected = isProtected;
+            this.isCured = false;
         }
-
-        void update() {
+        void update(int x,int y) {
             position.add(velocity);
-            if (state == State.INFECTED) {
+            if(overButton(10, 60, 40, 20)){ //over the exit button
+                exitOver = true;
+                resetOver = false;
+            } else if(overButton(10, 85, 40, 20)){
+                exitOver = false;
+                resetOver = true;
+            } else{
+                exitOver = false;
+                resetOver = false;
+            }
+
+            if (state == State.INFECTED && !isCured) {
                 infectedDays++;
+            }
+            if (state == State.INFECTED && !isCured) {
+                treatedDays++;
             }
             // If the person has been infected for 1000 days, they should be moved into
             // the recovered state.
             if (infectedDays == 1000) {
+                state = State.DEAD;
+                infectedDays = 0;
+                death++;
+            }
+            if(treatedDays == 800){
                 state = State.RECOVERED;
+                treatedDays = 0;
                 infectedDays = 0;
                 infected--;
                 recovered++;
@@ -176,8 +379,8 @@ public class DiseaseTransmissionSimulator extends PApplet {
             } else if (position.y > height - radius) {
                 position.y = height - radius;
                 velocity.y *= -1;
-            } else if (position.y < radius + 60) {
-                position.y = radius + 60;
+            } else if (position.y < radius + 120) {
+                position.y = radius + 120;
                 velocity.y *= -1;
             }
         }
@@ -187,15 +390,31 @@ public class DiseaseTransmissionSimulator extends PApplet {
         // (possible) TODO: Separate out the part that deals with global variables from
         // code that deals with the individual Balls specifically.
         void checkAndSetInfection(Ball other) {
+            int curedChance = floor(random(5)); //60% chance a person will get cured
+            if(other.isProtected){
+                int infectedChance = floor(random(10)); // 30% chance of infected when protected
+            }
+            int infectedChance = floor(random(6));
             if (other.state == State.INFECTED && this.state == State.UNINFECTED) {
-                this.state = State.INFECTED;
-                infected++;
-                uninfected--;
+                if(infectedChance < 3){
+                    this.state = State.INFECTED;
+                    infected++;
+                    uninfected--;
+                    if(curedChance < 3){
+                        this.isCured = true;
+                    }
+                }
+
             }
             if (this.state == State.INFECTED && other.state == State.UNINFECTED) {
-                other.state = State.INFECTED;
-                infected++;
-                uninfected--;
+                if(infectedChance < 3) {
+                    other.state = State.INFECTED;
+                    infected++;
+                    uninfected--;
+                    if(curedChance < 3){
+                        other.isCured = true;
+                    }
+                }
             }
         }
 
@@ -307,12 +526,20 @@ public class DiseaseTransmissionSimulator extends PApplet {
             } else if (state == State.UNINFECTED) {
                 // Uninfected people are drawn in gray.
                 fill(204);
-            } else {
+            } else if (state == State.RECOVERED) {
                 // Recovered people are drawn in green
                 fill(135, 224, 145);
+                //added stroke for color-blinded people
+                stroke(0);
+                strokeWeight(4);
+            } else {
+                fill(0);
+                stroke(255);
+                strokeWeight(4);
             }
 
             ellipse(position.x, position.y, radius * 2, radius * 2);
+            noStroke();
         }
     }
 
@@ -350,6 +577,7 @@ public class DiseaseTransmissionSimulator extends PApplet {
             position3Bottom = new PVector(leftCol + colWidth, top + recoveredShare + infectedShare + uninfectedShare);
         }
 
+
         public void display() {
             noStroke();
             rectMode(CORNERS);
@@ -368,6 +596,6 @@ public class DiseaseTransmissionSimulator extends PApplet {
     @Override
     public void settings() {
         // TODO: Customize screen size and so on here
-        size(640, 360);
+        size(800, 520);
     }
 }
