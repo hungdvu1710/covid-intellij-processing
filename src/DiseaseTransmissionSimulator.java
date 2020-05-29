@@ -99,7 +99,7 @@ public class DiseaseTransmissionSimulator extends PApplet {
     // is set to not be social distancing because it makes the simulation move faster.
     // TODO: Update this logic as necessary when getIsInfected() is updated.
     boolean getIsSocialDistancing(int i) {
-        return floor(random(0, 8)) != 0 && i >= initPatients;
+        return floor(random(0, 8)) == 0 && i >= initPatients;
     }
     boolean getIsProtected(int i) {
         return floor(random(6)) <= 4 && i >= initPatients;
