@@ -99,7 +99,7 @@ public class DiseaseTransmissionSimulator extends PApplet {
     // is set to not be social distancing because it makes the simulation move faster.
     // TODO: Update this logic as necessary when getIsInfected() is updated.
     boolean getIsSocialDistancing(int i) {
-        return floor(random(0, 8)) == 0 && i >= initPatients;
+        return floor(random(0, 8)) != 0 && i >= initPatients;
     }
     boolean getIsProtected(int i) {
         return floor(random(6)) <= 4 && i >= initPatients;
@@ -110,7 +110,7 @@ public class DiseaseTransmissionSimulator extends PApplet {
         background(51);
 
         for (Ball b : balls) {
-            b.update(mouseX,mouseY);
+            b.update();
             b.display();
             b.checkBoundaryCollision();
         }
@@ -334,7 +334,7 @@ public class DiseaseTransmissionSimulator extends PApplet {
             this.isProtected = isProtected;
             this.isCured = false;
         }
-        void update(int x,int y) {
+        void update() {
             position.add(velocity);
             if(overButton(10, 60, 40, 20)){ //over the exit button
                 exitOver = true;
@@ -350,17 +350,17 @@ public class DiseaseTransmissionSimulator extends PApplet {
             if (state == State.INFECTED && !isCured) {
                 infectedDays++;
             }
-            if (state == State.INFECTED && !isCured) {
+            if (state == State.INFECTED && isCured) {
                 treatedDays++;
             }
             // If the person has been infected for 1000 days, they should be moved into
             // the recovered state.
-            if (infectedDays == 1000) {
+            if (infectedDays >= 1000) {
                 state = State.DEAD;
                 infectedDays = 0;
                 death++;
             }
-            if(treatedDays == 800){
+            if(treatedDays >= 800){
                 state = State.RECOVERED;
                 treatedDays = 0;
                 infectedDays = 0;
